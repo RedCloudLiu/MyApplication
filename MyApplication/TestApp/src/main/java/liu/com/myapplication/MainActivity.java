@@ -1,13 +1,136 @@
 package liu.com.myapplication;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 
-public class MainActivity extends AppCompatActivity {
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+
+public class MainActivity extends Activity {
+
+    private static LocationClient locationClient;
+    private static LocationClientOption locationOption;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (locationOption == null)
+        {
+            locationOption = new LocationClientOption();
+            locationOption.setLocationMode(LocationClientOption.LocationMode.Battery_Saving);
+            locationOption.setCoorType("gcj02");
+            locationOption.setScanSpan(0);
+            locationOption.setIsNeedAddress(true);
+            locationOption.setOpenGps(true);
+            locationOption.setLocationNotify(false);
+            locationOption.setIgnoreKillProcess(true);
+            Log.w("------------>123","第一个地方");
+        }
+
+        if (locationClient == null)
+        {
+            System.loadLibrary("locSDK7a");
+            locationClient = new LocationClient(this);
+            locationClient.setLocOption(locationOption);
+            locationClient.registerLocationListener( new MyLocationListener() );
+            Log.w("------------>123","第二个地方");
+        }
+        locationClient.start();
+        Log.w("------------>123","第三个地方");
+    }
+
+
+
+    public static class MyLocationListener implements BDLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation location) {
+            Log.w("------------>123","回调");
+            //获取定位结果
+            StringBuffer sb = new StringBuffer(256);
+
+            sb.append("time : ");
+            sb.append(location.getTime());    //获取定位时间
+
+            sb.append("\nerror code : ");
+            sb.append(location.getLocType());    //获取类型类型
+
+            sb.append("\nlatitude : ");
+            sb.append(location.getLatitude());    //获取纬度信息
+
+            sb.append("\nlontitude : ");
+            sb.append(location.getLongitude());    //获取经度信息
+
+            sb.append("\nradius : ");
+            sb.append(location.getRadius());    //获取定位精准度
+
+            if (location.getLocType() == BDLocation.TypeGpsLocation){
+
+                // GPS定位结果
+                sb.append("\nspeed : ");
+                sb.append(location.getSpeed());    // 单位：公里每小时
+
+                sb.append("\nsatellite : ");
+                sb.append(location.getSatelliteNumber());    //获取卫星数
+
+                sb.append("\nheight : ");
+                sb.append(location.getAltitude());    //获取海拔高度信息，单位米
+
+                sb.append("\ndirection : ");
+                sb.append(location.getDirection());    //获取方向信息，单位度
+
+                sb.append("\naddr : ");
+                sb.append(location.getAddrStr());    //获取地址信息
+
+                sb.append("\ndescribe : ");
+                sb.append("gps定位成功");
+
+            } else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
+
+                // 网络定位结果
+                sb.append("\naddr : ");
+                sb.append(location.getAddrStr());    //获取地址信息
+
+                sb.append("\noperationers : ");
+                sb.append(location.getOperators());    //获取运营商信息
+
+                sb.append("\ndescribe : ");
+                sb.append("网络定位成功");
+
+            } else if (location.getLocType() == BDLocation.TypeOffLineLocation) {
+
+                // 离线定位结果
+                sb.append("\ndescribe : ");
+                sb.append("离线定位成功，离线定位结果也是有效的");
+
+            } else if (location.getLocType() == BDLocation.TypeServerError) {
+
+                sb.append("\ndescribe : ");
+                sb.append("服务端网络定位失败，可以反馈IMEI号和大体定位时间到loc-bugs@baidu.com，会有人追查原因");
+
+            } else if (location.getLocType() == BDLocation.TypeNetWorkException) {
+
+                sb.append("\ndescribe : ");
+                sb.append("网络不同导致定位失败，请检查网络是否通畅");
+
+            } else if (location.getLocType() == BDLocation.TypeCriteriaException) {
+
+                sb.append("\ndescribe : ");
+                sb.append("无法获取有效定位依据导致定位失败，一般是由于手机的原因，处于飞行模式下一般会造成这种结果，可以试着重启手机");
+
+            }
+
+            sb.append("\nlocationdescribe : ");
+            sb.append(location.getLocationDescribe());    //位置语义化信息
+
+            System.out.println(sb.toString());
+            Log.w("------------>123",sb.toString());
+        }
+
     }
 }
